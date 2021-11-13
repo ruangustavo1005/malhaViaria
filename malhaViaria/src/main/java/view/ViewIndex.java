@@ -1,6 +1,7 @@
 package view;
 
 import javax.swing.JButton;
+import javax.swing.JTable;
 import javax.swing.JTextField;
 
 /**
@@ -13,6 +14,9 @@ public class ViewIndex extends javax.swing.JFrame {
     public ViewIndex() {
         this.setTableModel(new TableModelMalhaViaria());
         initComponents();
+        this.getTable().setRowMargin(0);
+        this.getTable().setShowGrid(false);
+        this.getTable().getTableHeader().setUI(null);
     }
 
     public TableModelMalhaViaria getTableModel() {
@@ -31,12 +35,16 @@ public class ViewIndex extends javax.swing.JFrame {
         return fieldChoosedFile;
     }
 
+    public JTable getTable() {
+        return table;
+    }
+
     @SuppressWarnings("unchecked")
     // <editor-fold defaultstate="collapsed" desc="Generated Code">//GEN-BEGIN:initComponents
     private void initComponents() {
 
         jScrollPane1 = new javax.swing.JScrollPane();
-        jTable1 = new javax.swing.JTable();
+        table = new javax.swing.JTable();
         jLabel1 = new javax.swing.JLabel();
         fieldChoosedFile = new javax.swing.JTextField();
         buttonChooseFile = new javax.swing.JButton();
@@ -44,8 +52,9 @@ public class ViewIndex extends javax.swing.JFrame {
         setDefaultCloseOperation(javax.swing.WindowConstants.EXIT_ON_CLOSE);
         setTitle("Malha Viária - Leonardo Alex Fusinato e Ruan Gustavo Moretti");
 
-        jTable1.setModel(this.getTableModel());
-        jScrollPane1.setViewportView(jTable1);
+        table.setModel(this.getTableModel());
+        table.setRowHeight(30);
+        jScrollPane1.setViewportView(table);
 
         jLabel1.setText("Arquivo selecionado:");
 
@@ -57,16 +66,18 @@ public class ViewIndex extends javax.swing.JFrame {
         getContentPane().setLayout(layout);
         layout.setHorizontalGroup(
             layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
-            .addGroup(layout.createSequentialGroup()
-                .addComponent(jScrollPane1, javax.swing.GroupLayout.PREFERRED_SIZE, 808, javax.swing.GroupLayout.PREFERRED_SIZE)
-                .addGap(0, 0, Short.MAX_VALUE))
+            .addComponent(jScrollPane1)
             .addGroup(layout.createSequentialGroup()
                 .addContainerGap()
-                .addComponent(jLabel1)
-                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
-                .addComponent(fieldChoosedFile)
-                .addGap(18, 18, 18)
-                .addComponent(buttonChooseFile)
+                .addGroup(layout.createParallelGroup(javax.swing.GroupLayout.Alignment.TRAILING)
+                    .addGroup(layout.createSequentialGroup()
+                        .addComponent(jLabel1)
+                        .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
+                        .addComponent(fieldChoosedFile, javax.swing.GroupLayout.PREFERRED_SIZE, 402, javax.swing.GroupLayout.PREFERRED_SIZE)
+                        .addGap(0, 269, Short.MAX_VALUE))
+                    .addGroup(layout.createSequentialGroup()
+                        .addGap(0, 0, Short.MAX_VALUE)
+                        .addComponent(buttonChooseFile)))
                 .addContainerGap())
         );
         layout.setVerticalGroup(
@@ -75,10 +86,11 @@ public class ViewIndex extends javax.swing.JFrame {
                 .addContainerGap()
                 .addGroup(layout.createParallelGroup(javax.swing.GroupLayout.Alignment.BASELINE)
                     .addComponent(jLabel1)
-                    .addComponent(fieldChoosedFile, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
-                    .addComponent(buttonChooseFile))
-                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED, 64, Short.MAX_VALUE)
-                .addComponent(jScrollPane1, javax.swing.GroupLayout.PREFERRED_SIZE, 808, javax.swing.GroupLayout.PREFERRED_SIZE))
+                    .addComponent(fieldChoosedFile, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE))
+                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED, 44, Short.MAX_VALUE)
+                .addComponent(buttonChooseFile)
+                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
+                .addComponent(jScrollPane1, javax.swing.GroupLayout.PREFERRED_SIZE, 800, javax.swing.GroupLayout.PREFERRED_SIZE))
         );
 
         pack();
@@ -90,6 +102,6 @@ public class ViewIndex extends javax.swing.JFrame {
     private javax.swing.JTextField fieldChoosedFile;
     private javax.swing.JLabel jLabel1;
     private javax.swing.JScrollPane jScrollPane1;
-    private javax.swing.JTable jTable1;
+    private javax.swing.JTable table;
     // End of variables declaration//GEN-END:variables
 }

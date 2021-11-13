@@ -2,11 +2,15 @@ package controller;
 
 import java.io.File;
 import java.io.FileNotFoundException;
+import java.util.Enumeration;
 import java.util.Scanner;
 import javax.swing.JFileChooser;
 import javax.swing.JOptionPane;
+import javax.swing.JTable;
 import javax.swing.filechooser.FileNameExtensionFilter;
+import javax.swing.table.TableColumn;
 import model.Segmento;
+import view.TableModelMalhaViaria;
 import view.ViewIndex;
 
 /**
@@ -45,7 +49,7 @@ public class ControllerIndex {
                     try (Scanner scanner = new Scanner(file)) {
                         if (scanner.hasNextLine()) {
                             int rowCount = Integer.valueOf(scanner.nextLine());
-                             int columnCount = Integer.valueOf(scanner.nextLine());
+                            int columnCount = Integer.valueOf(scanner.nextLine());
                             
                             Segmento[][] segmentos = new Segmento[rowCount][columnCount];
                             
@@ -58,7 +62,21 @@ public class ControllerIndex {
                                 i++;
                             }
                             
-                            this.getView().getTableModel().setSegmentos(segmentos);
+                            JTable table = this.getView().getTable();
+                            TableModelMalhaViaria tableModel = this.getView().getTableModel();
+                            
+                            for (i = 0; i < tableModel.getColumnCount(); i++) {
+                                table.removeColumn(table.getColumn(String.valueOf(i)));
+                            }
+                            
+                            tableModel.setSegmentos(segmentos);
+                            
+                            for (i = 0; i < tableModel.getColumnCount(); i++) {
+                                TableColumn tableColumn = new TableColumn(i);
+                                tableColumn.setMinWidth(30);
+                                tableColumn.setMaxWidth(30);
+                                table.addColumn(tableColumn);
+                            }
                         }
                         else {
                             JOptionPane.showMessageDialog(this.getView(), "O arquivo está vazio", "Informação", JOptionPane.INFORMATION_MESSAGE);
