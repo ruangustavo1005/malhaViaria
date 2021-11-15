@@ -21,9 +21,6 @@ public class TableModelMalhaViaria extends AbstractTableModel {
         for (int i = 0; i < this.segmentos.length; i++) {
             for (int j = 0; j < this.segmentos[i].length; j++) {
                 this.setValueAt(segmentos[i][j].clona(), i, j);
-                if (this.segmentos[i][j].hasCarro()) {
-                    int x = 0;
-                }
             }
         }
     }
