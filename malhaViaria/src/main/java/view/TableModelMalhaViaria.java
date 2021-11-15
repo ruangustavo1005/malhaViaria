@@ -16,14 +16,15 @@ public class TableModelMalhaViaria extends AbstractTableModel {
     }
 
     public void setSegmentos(Segmento[][] segmentos) {
-        if (this.segmentos != null && this.segmentos.length > 0) {
-            this.fireTableRowsDeleted(0, this.segmentos.length - 1);
-        }
+        this.segmentos = new Segmento[segmentos.length][segmentos[0].length];
         
-        this.segmentos = segmentos;
-        
-        if (this.segmentos != null && this.segmentos.length > 0) {
-            this.fireTableRowsInserted(0, this.segmentos.length - 1);
+        for (int i = 0; i < this.segmentos.length; i++) {
+            for (int j = 0; j < this.segmentos[i].length; j++) {
+                this.setValueAt(segmentos[i][j].clona(), i, j);
+                if (this.segmentos[i][j].hasCarro()) {
+                    int x = 0;
+                }
+            }
         }
     }
     
@@ -42,9 +43,13 @@ public class TableModelMalhaViaria extends AbstractTableModel {
         return this.getSegmentos()[rowIndex][columnIndex].getInstanceImageIcon();
     }
 
-    public TableModelMalhaViaria setValueAt(Segmento segmento, int rowIndex, int columnIndex) {
-        this.segmentos[rowIndex][columnIndex] = segmento;
-        this.fireTableCellUpdated(rowIndex, columnIndex);
+    public TableModelMalhaViaria setValueAt(Segmento segmento) {
+        return this.setValueAt(segmento, segmento.getPosY(), segmento.getPosX());
+    }
+    
+    public TableModelMalhaViaria setValueAt(Segmento segmento, int i, int j) {
+        this.segmentos[i][j] = segmento;
+        this.fireTableCellUpdated(i, j);
         return this;
     }
     

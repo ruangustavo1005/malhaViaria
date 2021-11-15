@@ -16,8 +16,7 @@ public class ControllerMalhaViaria extends Thread {
     
     private Segmento[][] malha;
     
-    private ArrayList<Integer> entradasPosX;
-    private ArrayList<Integer> entradasPosY;
+    private ArrayList<Segmento> entradas;
     
     private Random random;
     
@@ -46,30 +45,25 @@ public class ControllerMalhaViaria extends Thread {
         this.emExecucao = true;
 
         while (this.isEmExecucao()) {
-            if (this.getQtdCarrosAndando() <= this.getMaxCarrosSimultaneos()) {
+            if (this.getQtdCarrosAndando() < this.getMaxCarrosSimultaneos()) {
                 long tempoAtual = System.currentTimeMillis();
                 
                 if (tempoAtual >= (this.ultimaAtualizacao + this.cooldownEntradaCarros)) {
                     Segmento entradaAleatoria;
-                    int posXEntrada, posYEntrada;
                     
                     do {
-                        long criterioEscolhaEntrada = this.getRandom().nextInt(this.getEntradasPosX().size());
-                        
-                        posYEntrada = this.getEntradasPosY().get((int) criterioEscolhaEntrada);
-                        posXEntrada = this.getEntradasPosX().get((int) criterioEscolhaEntrada);
-                        
-                        entradaAleatoria = this.malha[posYEntrada][posXEntrada];
+                        entradaAleatoria = this.getEntradas().get(this.getRandom().nextInt(this.getEntradas().size()));
                     }
                     while (entradaAleatoria.hasCarro());
                     
                     Carro carro = FactoryCarro.createCarro(entradaAleatoria);
                     
-                    ControllerIndex.getInstance().atualizaSegmento(entradaAleatoria, posYEntrada, posXEntrada)
+                    ControllerIndex.getInstance().atualizaSegmento(entradaAleatoria)
                                                  .atualizaProgressBar(1);
                     
                     carro.start();
                     
+                    this.qtdCarrosAndando++;
                     this.ultimaAtualizacao = tempoAtual;
                 }
             }
@@ -95,31 +89,24 @@ public class ControllerMalhaViaria extends Thread {
     }
 
     private ControllerMalhaViaria loadEntradasFromMalha(Segmento[][] malha) {
-        this.entradasPosX = new ArrayList<>();
-        this.entradasPosY = new ArrayList<>();
+        this.entradas = new ArrayList<>();
         
         if (malha != null && malha.length > 0 && malha[0].length > 0) {
-            for (int i = 0; i < malha.length; i++) {
-                Segmento[] segmentos = malha[i];
-                
+            for (Segmento[] segmentos : malha) {
                 if (segmentos[0].getTipo().compareTo(EnumSegmento.ESTRADA_DIRETA) == 0) {
-                    this.getEntradasPosX().add(0);
-                    this.getEntradasPosY().add(i);
+                    this.getEntradas().add(segmentos[0]);
                 }
                 if (segmentos[segmentos.length - 1].getTipo().compareTo(EnumSegmento.ESTRADA_ESQUERDA) == 0) {
-                    this.getEntradasPosX().add(segmentos.length - 1);
-                    this.getEntradasPosY().add(i);
+                    this.getEntradas().add(segmentos[segmentos.length - 1]);
                 }
             }
             
             for (int i = 1; i < malha[0].length - 1; i++) {
                 if (malha[0][i].getTipo().compareTo(EnumSegmento.ESTRADA_BAIXO) == 0) {
-                    this.getEntradasPosX().add(i);
-                    this.getEntradasPosY().add(0);
+                    this.getEntradas().add(malha[0][i]);
                 }
                 if (malha[malha.length - 1][i].getTipo().compareTo(EnumSegmento.ESTRADA_CIMA) == 0) {
-                    this.getEntradasPosX().add(i);
-                    this.getEntradasPosY().add(malha.length - 1);
+                    this.getEntradas().add(malha[malha.length - 1][i]);
                 }
             }
         }
@@ -132,7 +119,14 @@ public class ControllerMalhaViaria extends Thread {
     }
 
     public ControllerMalhaViaria setMalha(Segmento[][] malha) {
-        this.malha = malha;
+        this.malha = new Segmento[malha.length][malha[0].length];
+        
+        for (int i = 0; i < this.malha.length; i++) {
+            for (int j = 0; j < this.malha[i].length; j++) {
+                this.malha[i][j] = malha[i][j].clona();
+            }
+        }
+        
         return this.loadEntradasFromMalha(malha);
     }
 
@@ -172,12 +166,8 @@ public class ControllerMalhaViaria extends Thread {
         return this;
     }
 
-    public ArrayList<Integer> getEntradasPosX() {
-        return entradasPosX;
-    }
-
-    public ArrayList<Integer> getEntradasPosY() {
-        return entradasPosY;
+    public ArrayList<Segmento> getEntradas() {
+        return entradas;
     }
 
     public Random getRandom() {

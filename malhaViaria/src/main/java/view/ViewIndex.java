@@ -15,7 +15,6 @@ public class ViewIndex extends javax.swing.JFrame {
     public ViewIndex() {
         this.setTableModel(new TableModelMalhaViaria());
         initComponents();
-        this.getTable().setRowMargin(0);
         this.getTable().setShowGrid(false);
         this.getTable().getTableHeader().setUI(null);
     }
@@ -85,9 +84,13 @@ public class ViewIndex extends javax.swing.JFrame {
 
         setDefaultCloseOperation(javax.swing.WindowConstants.EXIT_ON_CLOSE);
         setTitle("Malha Viária - Leonardo Alex Fusinato e Ruan Gustavo Moretti");
+        setResizable(false);
 
+        table.setBackground(new java.awt.Color(238, 238, 238));
         table.setModel(this.getTableModel());
         table.setRowHeight(30);
+        table.getTableHeader().setResizingAllowed(false);
+        table.getTableHeader().setReorderingAllowed(false);
         jScrollPane1.setViewportView(table);
 
         jLabel1.setText("Arquivo selecionado:");

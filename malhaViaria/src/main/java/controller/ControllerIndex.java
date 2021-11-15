@@ -137,8 +137,8 @@ public class ControllerIndex {
         }
     }
     
-    public ControllerIndex atualizaSegmento(Segmento segmento, int i, int j) {
-        this.getView().getTableModel().setValueAt(segmento, i, j);
+    public ControllerIndex atualizaSegmento(Segmento segmento) {
+        this.getView().getTableModel().setValueAt(segmento);
         return this;
     }
     
@@ -187,12 +187,12 @@ public class ControllerIndex {
     
     public void addListenerButtonInterrupt() {
         this.getView().getButtonInterrupt().addActionListener((actionListener) -> {
-            ControllerMalhaViaria.getInstance().interruptMalhaViaria();
-            this.reloadSegmentosTabela();
+            this.getView().getTableModel().setSegmentos(this.malhaOriginal);
             this.getView().getProgressBarActiveCars().setValue(0);
             this.getView().getButtonChooseFile().setEnabled(true);
             this.getView().getFieldTempoEspera().setEnabled(true);
             this.getView().getFieldTotalCarros().setEnabled(true);
+            ControllerMalhaViaria.getInstance().interruptMalhaViaria();
         });
     }
 

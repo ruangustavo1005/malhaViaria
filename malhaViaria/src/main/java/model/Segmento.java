@@ -81,9 +81,15 @@ public class Segmento {
         return ImageUtils.getIconPng("segmento_" + StringUtils.lpad(this.getTipo().getIdentificador(), 2));
     }
     
-    @Override
-    public String toString() {
-        return this.getTipo().toString();
+    public Segmento clona() {
+        Segmento clone = new Segmento();
+        
+        clone.setPosX(this.getPosX())
+             .setPosY(this.getPosY())
+             .setTipo(this.getTipo())
+             .setCarro(this.getCarro() == null ? null : this.getCarro().clona().setSegmento(clone));
+        
+        return clone;
     }
     
 }
