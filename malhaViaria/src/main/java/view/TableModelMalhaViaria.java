@@ -1,10 +1,8 @@
 package view;
 
-import java.awt.Image;
 import javax.swing.ImageIcon;
 import javax.swing.table.AbstractTableModel;
 import model.Segmento;
-import utils.StringUtils;
 
 /**
  * @author Leonardo & Ruan
@@ -41,11 +39,15 @@ public class TableModelMalhaViaria extends AbstractTableModel {
 
     @Override
     public ImageIcon getValueAt(int rowIndex, int columnIndex) {
-        int segmento = this.getSegmentos()[rowIndex][columnIndex].getValue();
-        String pathImage = "/images/segmento_" + StringUtils.lpad(String.valueOf(segmento), 2, '0') + ".png";
-        return new ImageIcon(getClass().getResource(pathImage));
+        return this.getSegmentos()[rowIndex][columnIndex].getInstanceImageIcon();
     }
 
+    public TableModelMalhaViaria setValueAt(Segmento segmento, int rowIndex, int columnIndex) {
+        this.segmentos[rowIndex][columnIndex] = segmento;
+        this.fireTableCellUpdated(rowIndex, columnIndex);
+        return this;
+    }
+    
     @Override
     public String getColumnName(int column) {
         return String.valueOf(column);

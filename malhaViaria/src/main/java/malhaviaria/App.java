@@ -7,8 +7,8 @@ import controller.ControllerIndex;
  */
 public class App {
 
-    public static void main(String[] args) {
-        (new ControllerIndex()).abreTela();
+    public static void main(String[] args) throws InterruptedException {
+        ControllerIndex.getInstance().abreTela();
     }
     
 }

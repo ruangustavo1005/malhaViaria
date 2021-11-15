@@ -23,6 +23,10 @@ public class StringUtils {
         return texto;
     }
     
+    public static String lpad(int valor, int tamanho) {
+        return lpad(String.valueOf(valor), tamanho, '0');
+    }
+    
     public static String lpad(String texto, int tamanho) {
         return lpad(texto, tamanho, '0');
     }
