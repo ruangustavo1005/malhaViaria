@@ -101,14 +101,4 @@ public class Carro extends Thread {
         return ImageUtils.getIconPng("carro_" + StringUtils.lpad(this.getTipoCarro(), 2) + "_direcao_" + this.getDirecao());
     }
     
-    public Carro clona() {
-        Carro clone = new Carro();
-        
-        clone.setDirecao(this.getDirecao())
-             .setTipoCarro(this.getTipoCarro())
-             .setVelocidade(this.getVelocidade());
-        
-        return clone;
-    }
-    
 }

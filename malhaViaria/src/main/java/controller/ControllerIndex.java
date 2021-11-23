@@ -21,8 +21,6 @@ public class ControllerIndex {
     
     private ViewIndex view;
 
-    private Segmento[][] malhaOriginal;
-    
     private ControllerIndex() {
         this.view = new ViewIndex();
         this.addListeners();
@@ -100,9 +98,7 @@ public class ControllerIndex {
                     i++;
                 }
 
-                this.malhaOriginal = segmentos;
-                
-                this.reloadSegmentosTabela();
+                this.loadSegmentosTabela(segmentos);
                 
                 this.getView().getButtonStart().setEnabled(true);
                 this.getView().getButtonStop().setEnabled(true);
@@ -119,7 +115,7 @@ public class ControllerIndex {
         }
     }
     
-    private void reloadSegmentosTabela() {
+    private void loadSegmentosTabela(Segmento[][] segmentos) {
         JTable table = this.getView().getTable();
         TableModelMalhaViaria tableModel = this.getView().getTableModel();
 
@@ -127,7 +123,7 @@ public class ControllerIndex {
             table.removeColumn(table.getColumn(String.valueOf(i)));
         }
 
-        tableModel.setSegmentos(this.malhaOriginal);
+        tableModel.setSegmentos(segmentos);
 
         for (int i = 0; i < tableModel.getColumnCount(); i++) {
             TableColumn tableColumn = new TableColumn(i);
@@ -169,7 +165,6 @@ public class ControllerIndex {
                     
                     ControllerMalhaViaria.getInstance().setCooldownEntradaCarros(Integer.parseInt(tempoEspera))
                                                        .setMaxCarrosSimultaneos(Integer.parseInt(totalCarros))
-                                                       .setMalha(this.malhaOriginal)
                                                        .startMalhaViaria();
                 }
             }
@@ -187,7 +182,7 @@ public class ControllerIndex {
     
     public void addListenerButtonInterrupt() {
         this.getView().getButtonInterrupt().addActionListener((actionListener) -> {
-            this.getView().getTableModel().setSegmentos(this.malhaOriginal);
+            this.getView().getTableModel().resetSegmentos();
             this.getView().getProgressBarActiveCars().setValue(0);
             this.getView().getButtonChooseFile().setEnabled(true);
             this.getView().getFieldTempoEspera().setEnabled(true);

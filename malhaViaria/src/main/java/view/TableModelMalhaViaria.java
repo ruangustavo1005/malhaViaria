@@ -16,11 +16,14 @@ public class TableModelMalhaViaria extends AbstractTableModel {
     }
 
     public void setSegmentos(Segmento[][] segmentos) {
-        this.segmentos = new Segmento[segmentos.length][segmentos[0].length];
-        
+        this.segmentos = segmentos;
+    }
+    
+    public void resetSegmentos() {
         for (int i = 0; i < this.segmentos.length; i++) {
             for (int j = 0; j < this.segmentos[i].length; j++) {
-                this.setValueAt(segmentos[i][j].clona(), i, j);
+                this.segmentos[i][j].setCarro(null);
+                this.fireTableCellUpdated(i, j);
             }
         }
     }
