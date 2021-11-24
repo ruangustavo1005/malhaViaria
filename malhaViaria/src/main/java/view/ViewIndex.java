@@ -4,27 +4,28 @@ import javax.swing.JButton;
 import javax.swing.JProgressBar;
 import javax.swing.JTable;
 import javax.swing.JTextField;
+import model.Malha;
 
 /**
  * @author Leonardo & Ruan
  */
 public class ViewIndex extends javax.swing.JFrame {
 
-    private TableModelMalhaViaria tableModel;
+    private Malha malha;
     
     public ViewIndex() {
-        this.setTableModel(new TableModelMalhaViaria());
+        this.setTableModel(new Malha());
         initComponents();
         this.getTable().setShowGrid(false);
         this.getTable().getTableHeader().setUI(null);
     }
 
-    public TableModelMalhaViaria getTableModel() {
-        return tableModel;
+    public Malha getTableModel() {
+        return malha;
     }
 
-    public void setTableModel(TableModelMalhaViaria tableModel) {
-        this.tableModel = tableModel;
+    public void setTableModel(Malha malha) {
+        this.malha = malha;
     }
 
     public JButton getButtonChooseFile() {

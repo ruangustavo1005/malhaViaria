@@ -3,6 +3,7 @@ package factory;
 
 import java.util.Random;
 import model.Carro;
+import model.Malha;
 import model.Segmento;
 
 /**
@@ -10,13 +11,14 @@ import model.Segmento;
  */
 public class FactoryCarro {
 
-    static public Carro createCarro(Segmento segmentoInicial) {
+    static public Carro createCarro(Segmento segmentoInicial, Malha malha) {
         Carro carro = new Carro();
         
         Random random = new Random();
         
         carro.setVelocidade(500 + random.nextInt(1001))
              .setTipoCarro(random.nextInt(12))
+             .setMalha(malha)
              .setSegmento(segmentoInicial);
         
         segmentoInicial.setCarro(carro);

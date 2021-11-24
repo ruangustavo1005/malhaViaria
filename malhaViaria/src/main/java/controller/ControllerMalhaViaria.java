@@ -4,7 +4,10 @@ import enumerators.EnumSegmento;
 import factory.FactoryCarro;
 import java.util.ArrayList;
 import java.util.Random;
+import java.util.logging.Level;
+import java.util.logging.Logger;
 import model.Carro;
+import model.Malha;
 import model.Segmento;
 
 /**
@@ -23,7 +26,6 @@ public class ControllerMalhaViaria extends Thread {
     private int cooldownEntradaCarros;
     private int maxCarrosSimultaneos;
     private boolean emExecucao;
-    private long ultimaAtualizacao;
     private int qtdCarrosAndando;
     
     private ControllerMalhaViaria() {
@@ -46,25 +48,26 @@ public class ControllerMalhaViaria extends Thread {
         
         while (this.isEmExecucao()) {
             if (this.getQtdCarrosAndando() < this.getMaxCarrosSimultaneos()) {
-                long tempoAtual = System.currentTimeMillis();
-                
-                if (tempoAtual >= (this.ultimaAtualizacao + this.cooldownEntradaCarros)) {
+                try {
                     Segmento entradaAleatoria;
-                    
+
                     do {
                         entradaAleatoria = this.getEntradas().get(this.getRandom().nextInt(this.getEntradas().size()));
                     }
                     while (entradaAleatoria.hasCarro());
-                    
-                    Carro carro = FactoryCarro.createCarro(entradaAleatoria);
-                    
-                    ControllerIndex.getInstance().atualizaSegmento(entradaAleatoria)
-                                                 .atualizaProgressBar(1);
-                    
+
+                    Carro carro = FactoryCarro.createCarro(entradaAleatoria, this.getMalha());
+
+                    ControllerIndex.getInstance().atualizaProgressBar(1);
+
                     carro.start();
-                    
+
                     this.qtdCarrosAndando++;
-                    this.ultimaAtualizacao = tempoAtual;
+                    
+                    ControllerMalhaViaria.sleep(this.getCooldownEntradaCarros());
+                }
+                catch (InterruptedException ex) {
+                    Logger.getLogger(ControllerMalhaViaria.class.getName()).log(Level.SEVERE, null, ex);
                 }
             }
         }
@@ -90,7 +93,7 @@ public class ControllerMalhaViaria extends Thread {
 
     private ControllerMalhaViaria loadEntradasFromMalha() {
         this.entradas = new ArrayList<>();
-        Segmento[][] malha = this.getMalha();
+        Segmento[][] malha = this.getMalha().getMalha();
         
         if (malha != null && malha.length > 0 && malha[0].length > 0) {
             for (Segmento[] segmentos : malha) {
@@ -115,8 +118,8 @@ public class ControllerMalhaViaria extends Thread {
         return this;
     }
     
-    public Segmento[][] getMalha() {
-        return ControllerIndex.getInstance().getView().getTableModel().getSegmentos();
+    public Malha getMalha() {
+        return ControllerIndex.getInstance().getMalha();
     }
     
     public int getRowCount() {
@@ -165,10 +168,6 @@ public class ControllerMalhaViaria extends Thread {
 
     public boolean isEmExecucao() {
         return emExecucao;
-    }
-
-    public long getUltimaAtualizacao() {
-        return ultimaAtualizacao;
     }
 
     public int getQtdCarrosAndando() {

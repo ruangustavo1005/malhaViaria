@@ -8,8 +8,8 @@ import javax.swing.JOptionPane;
 import javax.swing.JTable;
 import javax.swing.filechooser.FileNameExtensionFilter;
 import javax.swing.table.TableColumn;
+import model.Malha;
 import model.Segmento;
-import view.TableModelMalhaViaria;
 import view.ViewIndex;
 
 /**
@@ -85,20 +85,20 @@ public class ControllerIndex {
                 ControllerMalhaViaria.getInstance().setRowCount(rowCount)
                                                    .setColumnCount(columnCount);
                 
-                Segmento[][] segmentos = new Segmento[rowCount][columnCount];
+                Segmento[][] malha = new Segmento[rowCount][columnCount];
 
                 int i = 0;
                 while (scanner.hasNextLine()) {
                     String[] line = scanner.nextLine().split("\t");
                     for (int j = 0; j < columnCount; j++) {
-                        segmentos[i][j] = (new Segmento()).setTipo(Integer.valueOf(line[j]))
-                                                          .setPosX(j)
-                                                          .setPosY(i);
+                        malha[i][j] = (new Segmento()).setTipo(Integer.valueOf(line[j]))
+                                                      .setPosX(j)
+                                                      .setPosY(i);
                     }
                     i++;
                 }
 
-                this.loadSegmentosTabela(segmentos);
+                this.loadSegmentosTabela(malha);
                 
                 this.getView().getButtonStart().setEnabled(true);
                 this.getView().getButtonStop().setEnabled(true);
@@ -115,17 +115,16 @@ public class ControllerIndex {
         }
     }
     
-    private void loadSegmentosTabela(Segmento[][] segmentos) {
+    private void loadSegmentosTabela(Segmento[][] malha) {
         JTable table = this.getView().getTable();
-        TableModelMalhaViaria tableModel = this.getView().getTableModel();
 
-        for (int i = 0; i < tableModel.getColumnCount(); i++) {
+        for (int i = 0; i < this.getView().getTableModel().getColumnCount(); i++) {
             table.removeColumn(table.getColumn(String.valueOf(i)));
         }
 
-        tableModel.setSegmentos(segmentos);
+        this.getView().getTableModel().setMalha(malha);
 
-        for (int i = 0; i < tableModel.getColumnCount(); i++) {
+        for (int i = 0; i < this.getView().getTableModel().getColumnCount(); i++) {
             TableColumn tableColumn = new TableColumn(i);
             tableColumn.setMinWidth(30);
             tableColumn.setMaxWidth(30);
@@ -191,4 +190,8 @@ public class ControllerIndex {
         });
     }
 
+    public Malha getMalha() {
+        return this.getView().getTableModel();
+    }
+    
 }

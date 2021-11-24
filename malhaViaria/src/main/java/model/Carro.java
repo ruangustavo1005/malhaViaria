@@ -2,6 +2,8 @@ package model;
 
 import enumerators.EnumDirecaoCarro;
 import enumerators.EnumSegmento;
+import java.util.logging.Level;
+import java.util.logging.Logger;
 import javax.swing.ImageIcon;
 import utils.ImageUtils;
 import utils.StringUtils;
@@ -21,6 +23,7 @@ public class Carro extends Thread {
     private int tipoCarro;
     private EnumDirecaoCarro direcao;
     private Segmento segmento;
+    private Malha malha;
     
     private boolean emExecucao;
 
@@ -33,7 +36,25 @@ public class Carro extends Thread {
         this.emExecucao = true;
 
         while (this.isEmExecucao()) {
-            
+            try {
+                Carro.sleep(this.getVelocidade());
+                
+                Segmento segmentoAFrente = this.getSegmentoAFrente();
+                
+                this.getSegmento().setCarro(null);
+                
+                if (segmentoAFrente != null) {
+                    segmentoAFrente.setCarro(this);
+                }
+                
+                this.setSegmento(segmentoAFrente);
+                
+                if (this.getSegmento() == null) {
+                    break;
+                }
+            } catch (InterruptedException ex) {
+                Logger.getLogger(Carro.class.getName()).log(Level.SEVERE, null, ex);
+            }
         }
     }
 
@@ -69,8 +90,21 @@ public class Carro extends Thread {
     }
 
     public Carro setSegmento(Segmento segmento) {
-        this.setDirecaoBySegmento(segmento);
+        if (segmento != null) {
+            this.setDirecaoBySegmento(segmento);
+        }
+        this.getMalha().fireTableCellUpdated(this.segmento);
         this.segmento = segmento;
+        this.getMalha().fireTableCellUpdated(segmento);
+        return this;
+    }
+
+    public Malha getMalha() {
+        return malha;
+    }
+
+    public Carro setMalha(Malha malha) {
+        this.malha = malha;
         return this;
     }
 
@@ -99,6 +133,26 @@ public class Carro extends Thread {
     
     public ImageIcon getInstanceImageIcon() {
         return ImageUtils.getIconPng("carro_" + StringUtils.lpad(this.getTipoCarro(), 2) + "_direcao_" + this.getDirecao());
+    }
+    
+    private Segmento getSegmentoAFrente() {
+        int i = this.getSegmento().getPosY();
+        int j = this.getSegmento().getPosX();
+        
+        if (this.getDirecao().compareTo(EnumDirecaoCarro.CIMA) == 0) {
+            i--;
+        }
+        else if (this.getDirecao().compareTo(EnumDirecaoCarro.DIREITA) == 0) {
+            j++;
+        }
+        else if (this.getDirecao().compareTo(EnumDirecaoCarro.BAIXO) == 0) {
+            i++;
+        }
+        else if (this.getDirecao().compareTo(EnumDirecaoCarro.ESQUERDA) == 0) {
+            j--;
+        }
+        
+        return this.getMalha().getSegmento(i, j);
     }
     
 }
