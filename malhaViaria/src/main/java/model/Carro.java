@@ -1,7 +1,9 @@
 package model;
 
+import controller.ControllerMalhaViaria;
 import enumerators.EnumDirecaoCarro;
 import enumerators.EnumSegmento;
+import java.util.Random;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 import javax.swing.ImageIcon;
@@ -37,17 +39,56 @@ public class Carro extends Thread {
 
         while (this.isEmExecucao()) {
             try {
-                Carro.sleep(this.getVelocidade());
+                Carro.sleep(this.getVelocidade() / 2);
                 
-                Segmento segmentoAFrente = this.getSegmentoAFrente();
+                if (!this.emExecucao) {
+                    break;
+                }
+                
+                boolean podeGirar = this.podeGirar();
+                boolean deveGirar = this.deveGirar();
+                
+                if (podeGirar && (deveGirar || (new Random()).nextBoolean())) {
+                    this.gira();
+                }
+                
+                Carro.sleep(this.getVelocidade() / 2);
+                
+                if (!this.emExecucao) {
+                    break;
+                }
+                
+                Segmento segmentoAFrente = this.getSegmentoAFrente(this.getDirecao());
+                
+                if (segmentoAFrente != null) {
+                    while (!this.podeAndar(segmentoAFrente) && !this.podeUltrapassar(segmentoAFrente)) {
+                        Carro.sleep(10);
+                        
+                        if (!this.emExecucao) {
+                            break;
+                        }
+                        
+                        if (podeGirar && !deveGirar) {
+                            this.gira();
+                            segmentoAFrente = this.getSegmentoAFrente(this.getDirecao());
+                        }
+                    }
+                }
                 
                 this.getSegmento().setCarro(null);
                 
+                Segmento segmentoDisponivel = null;
+                
                 if (segmentoAFrente != null) {
-                    segmentoAFrente.setCarro(this);
+                    if (this.podeAndar(segmentoAFrente)) {
+                        segmentoDisponivel = segmentoAFrente.setCarro(this);
+                    }
+                    else if (this.podeUltrapassar(segmentoAFrente)) {
+                        segmentoDisponivel = this.getSegmentoDiagonal(segmentoAFrente);
+                    }
                 }
                 
-                this.setSegmento(segmentoAFrente);
+                this.setSegmento(segmentoDisponivel);
                 
                 if (this.getSegmento() == null) {
                     break;
@@ -56,6 +97,13 @@ public class Carro extends Thread {
                 Logger.getLogger(Carro.class.getName()).log(Level.SEVERE, null, ex);
             }
         }
+        
+        ControllerMalhaViaria.getInstance().decrementaQtdCarrosAndando();
+    }
+    
+    public Carro stopCarro() {
+        this.emExecucao = false;
+        return this;
     }
 
     public int getVelocidade() {
@@ -111,16 +159,20 @@ public class Carro extends Thread {
     public Carro setDirecaoBySegmento(Segmento segmento) {
         EnumSegmento tipoSegmento = segmento.getTipo();
         
-        if (tipoSegmento.compareTo(EnumSegmento.ESTRADA_CIMA) == 0) {
+        if (tipoSegmento.compareTo(EnumSegmento.ESTRADA_CIMA) == 0
+         || tipoSegmento.compareTo(EnumSegmento.CRUZAMENTO_CIMA) == 0) {
             this.setDirecao(EnumDirecaoCarro.CIMA);
         }
-        else if (tipoSegmento.compareTo(EnumSegmento.ESTRADA_DIRETA) == 0) {
+        else if (tipoSegmento.compareTo(EnumSegmento.ESTRADA_DIRETA) == 0
+              || tipoSegmento.compareTo(EnumSegmento.CRUZAMENTO_DIRETA) == 0) {
             this.setDirecao(EnumDirecaoCarro.DIREITA);
         }
-        else if (tipoSegmento.compareTo(EnumSegmento.ESTRADA_BAIXO) == 0) {
+        else if (tipoSegmento.compareTo(EnumSegmento.ESTRADA_BAIXO) == 0
+              || tipoSegmento.compareTo(EnumSegmento.CRUZAMENTO_BAIXO) == 0) {
             this.setDirecao(EnumDirecaoCarro.BAIXO);
         }
-        else if (tipoSegmento.compareTo(EnumSegmento.ESTRADA_ESQUERDA) == 0) {
+        else if (tipoSegmento.compareTo(EnumSegmento.ESTRADA_ESQUERDA) == 0
+              || tipoSegmento.compareTo(EnumSegmento.CRUZAMENTO_ESQUERDA) == 0) {
             this.setDirecao(EnumDirecaoCarro.ESQUERDA);
         }
         
@@ -135,24 +187,222 @@ public class Carro extends Thread {
         return ImageUtils.getIconPng("carro_" + StringUtils.lpad(this.getTipoCarro(), 2) + "_direcao_" + this.getDirecao());
     }
     
-    private Segmento getSegmentoAFrente() {
+    private Segmento getSegmentoAFrente(EnumDirecaoCarro direcaoCarro) {
         int i = this.getSegmento().getPosY();
         int j = this.getSegmento().getPosX();
         
-        if (this.getDirecao().compareTo(EnumDirecaoCarro.CIMA) == 0) {
+        if (this.isDirecaoCima(direcaoCarro)) {
             i--;
         }
-        else if (this.getDirecao().compareTo(EnumDirecaoCarro.DIREITA) == 0) {
+        else if (this.isDirecaoDireita(direcaoCarro)) {
             j++;
         }
-        else if (this.getDirecao().compareTo(EnumDirecaoCarro.BAIXO) == 0) {
+        else if (this.isDirecaoBaixo(direcaoCarro)) {
             i++;
         }
-        else if (this.getDirecao().compareTo(EnumDirecaoCarro.ESQUERDA) == 0) {
+        else if (this.isDirecaoEsquerda(direcaoCarro)) {
             j--;
         }
         
         return this.getMalha().getSegmento(i, j);
+    }
+    
+    private boolean isDirecaoCima() {
+        return this.isDirecaoCima(this.getDirecao());
+    }
+    
+    private boolean isDirecaoCima(EnumDirecaoCarro direcaoCarro) {
+        return direcaoCarro.compareTo(EnumDirecaoCarro.CIMA) == 0;
+    }
+    
+    private boolean isDirecaoDireita() {
+        return this.isDirecaoDireita(this.getDirecao());
+    }
+    
+    private boolean isDirecaoDireita(EnumDirecaoCarro direcaoCarro) {
+        return direcaoCarro.compareTo(EnumDirecaoCarro.DIREITA) == 0;
+    }
+    
+    private boolean isDirecaoBaixo() {
+        return this.isDirecaoBaixo(this.getDirecao());
+    }
+    
+    private boolean isDirecaoBaixo(EnumDirecaoCarro direcaoCarro) {
+        return direcaoCarro.compareTo(EnumDirecaoCarro.BAIXO) == 0;
+    }
+    
+    private boolean isDirecaoEsquerda() {
+        return this.isDirecaoEsquerda(this.getDirecao());
+    }
+    
+    private boolean isDirecaoEsquerda(EnumDirecaoCarro direcaoCarro) {
+        return direcaoCarro.compareTo(EnumDirecaoCarro.ESQUERDA) == 0;
+    }
+    
+    public Segmento getSegmentoADiagonalEsquerda(Segmento segmentoAFrente) {
+        int i = segmentoAFrente.getPosY();
+        int j = segmentoAFrente.getPosX();
+        
+        if (this.isDirecaoCima()) {
+            j--;
+        }
+        else if (this.isDirecaoDireita()) {
+            i--;
+        }
+        else if (this.isDirecaoBaixo()) {
+            j++;
+        }
+        else if (this.isDirecaoEsquerda()) {
+            i++;
+        }
+        
+        return this.getMalha().getSegmento(i, j);
+    }
+    
+    public Segmento getSegmentoADiagonalDireita(Segmento segmentoAFrente) {
+        int i = segmentoAFrente.getPosY();
+        int j = segmentoAFrente.getPosX();
+        
+        if (this.isDirecaoCima()) {
+            j++;
+        }
+        else if (this.isDirecaoDireita()) {
+            i++;
+        }
+        else if (this.isDirecaoBaixo()) {
+            j--;
+        }
+        else if (this.isDirecaoEsquerda()) {
+            i--;
+        }
+        
+        return this.getMalha().getSegmento(i, j);
+    }
+    
+    private boolean deveGirar() {
+        Segmento segmentoACima     = this.getSegmentoAFrente(EnumDirecaoCarro.CIMA);
+        Segmento segmentoADireita  = this.getSegmentoAFrente(EnumDirecaoCarro.DIREITA);
+        Segmento segmentoABaixo    = this.getSegmentoAFrente(EnumDirecaoCarro.BAIXO);
+        Segmento segmentoAEsquerda = this.getSegmentoAFrente(EnumDirecaoCarro.ESQUERDA);
+        
+        boolean isSegmentoACimaValido = segmentoACima != null
+                                     && (segmentoACima.getTipo().compareTo(EnumSegmento.ESTRADA_CIMA) == 0
+                                      || segmentoACima.getTipo().compareTo(EnumSegmento.CRUZAMENTO_CIMA) == 0
+                                      || segmentoACima.getTipo().compareTo(EnumSegmento.CRUZAMENTO_CIMA_DIREITA) == 0
+                                      || segmentoACima.getTipo().compareTo(EnumSegmento.CRUZAMENTO_CIMA_ESQUERDA) == 0);
+        
+        boolean isSegmentoADireitaValido = segmentoADireita != null
+                                        && (segmentoADireita.getTipo().compareTo(EnumSegmento.ESTRADA_DIRETA) == 0
+                                         || segmentoADireita.getTipo().compareTo(EnumSegmento.CRUZAMENTO_DIRETA) == 0
+                                         || segmentoADireita.getTipo().compareTo(EnumSegmento.CRUZAMENTO_CIMA_DIREITA) == 0
+                                         || segmentoADireita.getTipo().compareTo(EnumSegmento.CRUZAMENTO_BAIXO_DIREITA) == 0);
+        
+        boolean isSegmentoABaixoValido = segmentoABaixo != null
+                                      && (segmentoABaixo.getTipo().compareTo(EnumSegmento.ESTRADA_BAIXO) == 0
+                                       || segmentoABaixo.getTipo().compareTo(EnumSegmento.CRUZAMENTO_BAIXO) == 0
+                                       || segmentoABaixo.getTipo().compareTo(EnumSegmento.CRUZAMENTO_BAIXO_DIREITA) == 0
+                                       || segmentoABaixo.getTipo().compareTo(EnumSegmento.CRUZAMENTO_BAIXO_ESQUERDA) == 0);
+        
+        boolean isSegmentoAEsquerdaValido = segmentoAEsquerda != null
+                                         && (segmentoAEsquerda.getTipo().compareTo(EnumSegmento.ESTRADA_ESQUERDA) == 0
+                                          || segmentoAEsquerda.getTipo().compareTo(EnumSegmento.CRUZAMENTO_ESQUERDA) == 0
+                                          || segmentoAEsquerda.getTipo().compareTo(EnumSegmento.CRUZAMENTO_CIMA_ESQUERDA) == 0
+                                          || segmentoAEsquerda.getTipo().compareTo(EnumSegmento.CRUZAMENTO_BAIXO_ESQUERDA) == 0);
+        
+        return (this.getSegmento().getTipo().compareTo(EnumSegmento.CRUZAMENTO_CIMA_DIREITA) == 0
+             && (isSegmentoACimaValido ^ isSegmentoADireitaValido))
+            || (this.getSegmento().getTipo().compareTo(EnumSegmento.CRUZAMENTO_CIMA_ESQUERDA) == 0
+             && (isSegmentoACimaValido ^ isSegmentoAEsquerdaValido))
+            || (this.getSegmento().getTipo().compareTo(EnumSegmento.CRUZAMENTO_BAIXO_DIREITA) == 0
+             && (isSegmentoABaixoValido ^ isSegmentoADireitaValido))
+            || (this.getSegmento().getTipo().compareTo(EnumSegmento.CRUZAMENTO_BAIXO_ESQUERDA) == 0
+             && (isSegmentoABaixoValido ^ isSegmentoAEsquerdaValido));
+    }
+    
+    private boolean podeGirar() {
+        return this.getSegmento().getTipo().compareTo(EnumSegmento.CRUZAMENTO_CIMA_DIREITA) == 0
+            || this.getSegmento().getTipo().compareTo(EnumSegmento.CRUZAMENTO_CIMA_ESQUERDA) == 0
+            || this.getSegmento().getTipo().compareTo(EnumSegmento.CRUZAMENTO_BAIXO_DIREITA) == 0
+            || this.getSegmento().getTipo().compareTo(EnumSegmento.CRUZAMENTO_BAIXO_ESQUERDA) == 0;
+    }
+    
+    private void gira() {
+        if (this.getSegmento().getTipo().compareTo(EnumSegmento.CRUZAMENTO_CIMA_DIREITA) == 0) {
+            if (this.getDirecao().compareTo(EnumDirecaoCarro.CIMA) == 0) {
+                this.setDirecao(EnumDirecaoCarro.DIREITA);
+            }
+            else {
+                this.setDirecao(EnumDirecaoCarro.CIMA);
+            }
+        }
+        else if (this.getSegmento().getTipo().compareTo(EnumSegmento.CRUZAMENTO_CIMA_ESQUERDA) == 0) {
+            if (this.getDirecao().compareTo(EnumDirecaoCarro.CIMA) == 0) {
+                this.setDirecao(EnumDirecaoCarro.ESQUERDA);
+            }
+            else {
+                this.setDirecao(EnumDirecaoCarro.CIMA);
+            }
+        }
+        else if (this.getSegmento().getTipo().compareTo(EnumSegmento.CRUZAMENTO_BAIXO_DIREITA) == 0) {
+            if (this.getDirecao().compareTo(EnumDirecaoCarro.BAIXO) == 0) {
+                this.setDirecao(EnumDirecaoCarro.DIREITA);
+            }
+            else {
+                this.setDirecao(EnumDirecaoCarro.BAIXO);
+            }
+        }
+        else if (this.getSegmento().getTipo().compareTo(EnumSegmento.CRUZAMENTO_BAIXO_ESQUERDA) == 0) {
+            if (this.getDirecao().compareTo(EnumDirecaoCarro.BAIXO) == 0) {
+                this.setDirecao(EnumDirecaoCarro.ESQUERDA);
+            }
+            else {
+                this.setDirecao(EnumDirecaoCarro.BAIXO);
+            }
+        }
+        
+        this.getMalha().fireTableCellUpdated(this.getSegmento());
+    }
+    
+    private synchronized boolean podeAndar(Segmento segmentoAFrente) {
+        return !segmentoAFrente.hasCarro();
+    }
+    
+    private boolean podeUltrapassar(Segmento segmentoAFrente) {
+        if (this.getSegmento().getTipo().compareTo(EnumSegmento.ESTRADA_CIMA) != 0
+         && this.getSegmento().getTipo().compareTo(EnumSegmento.ESTRADA_DIRETA) != 0
+         && this.getSegmento().getTipo().compareTo(EnumSegmento.ESTRADA_BAIXO) != 0
+         && this.getSegmento().getTipo().compareTo(EnumSegmento.ESTRADA_ESQUERDA) != 0) {
+            return false;
+        }
+        
+        Segmento segmentoADiagonalDireita  = this.getSegmentoADiagonalDireita(segmentoAFrente);
+        Segmento segmentoADiagonalEsquerda = this.getSegmentoADiagonalEsquerda(segmentoAFrente);
+        
+        return (segmentoADiagonalDireita != null
+             && segmentoADiagonalDireita.getTipo().equals(segmentoAFrente.getTipo())
+             && this.podeAndar(segmentoADiagonalDireita))
+            || (segmentoADiagonalEsquerda != null
+             && segmentoADiagonalEsquerda.getTipo().equals(segmentoAFrente.getTipo())
+             && this.podeAndar(segmentoADiagonalEsquerda));
+    }
+    
+    private Segmento getSegmentoDiagonal(Segmento segmentoAFrente) {
+        Segmento segmentoDiagonal = null;
+        
+        Segmento segmentoADiagonalDireita  = this.getSegmentoADiagonalDireita(segmentoAFrente);
+        Segmento segmentoADiagonalEsquerda = this.getSegmentoADiagonalEsquerda(segmentoAFrente);
+        
+        if (segmentoADiagonalDireita != null && segmentoADiagonalEsquerda != null) {
+            segmentoDiagonal = (new Random().nextBoolean()) ? segmentoADiagonalDireita : segmentoADiagonalEsquerda;
+        }
+        else if (segmentoADiagonalDireita != null) {
+            segmentoDiagonal = segmentoADiagonalDireita;
+        }
+        else if (segmentoADiagonalEsquerda != null) {
+            segmentoDiagonal = segmentoADiagonalEsquerda;
+        }
+        
+        return segmentoDiagonal;
     }
     
 }

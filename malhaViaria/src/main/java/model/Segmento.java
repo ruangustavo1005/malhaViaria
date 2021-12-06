@@ -38,11 +38,11 @@ public class Segmento {
         return this;
     }
 
-    public Carro getCarro() {
+    public synchronized Carro getCarro() {
         return carro;
     }
 
-    public Segmento setCarro(Carro carro) {
+    public synchronized Segmento setCarro(Carro carro) {
         this.carro = carro;
         return this;
     }
@@ -52,7 +52,7 @@ public class Segmento {
         return this;
     }
     
-    public boolean hasCarro() {
+    public synchronized boolean hasCarro() {
         return this.carro != null;
     }
 

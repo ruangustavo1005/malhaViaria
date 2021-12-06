@@ -16,7 +16,7 @@ public class FactoryCarro {
         
         Random random = new Random();
         
-        carro.setVelocidade(500 + random.nextInt(1001))
+        carro.setVelocidade((30 + random.nextInt(120)) * 10)
              .setTipoCarro(random.nextInt(12))
              .setMalha(malha)
              .setSegmento(segmentoInicial);

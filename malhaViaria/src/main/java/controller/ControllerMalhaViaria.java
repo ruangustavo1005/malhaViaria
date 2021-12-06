@@ -18,8 +18,9 @@ public class ControllerMalhaViaria extends Thread {
     private static ControllerMalhaViaria instance;
     
     private ArrayList<Segmento> entradas;
+    private ArrayList<Carro> carrosAndando;
     
-    private Random random;
+    private final Random random;
     
     private int rowCount;
     private int columnCount;
@@ -33,7 +34,7 @@ public class ControllerMalhaViaria extends Thread {
         this.random = new Random();
     }
 
-    public static ControllerMalhaViaria getInstance() {
+    public synchronized static ControllerMalhaViaria getInstance() {
         if (ControllerMalhaViaria.instance == null) {
             ControllerMalhaViaria.instance = new ControllerMalhaViaria();
         }
@@ -46,6 +47,8 @@ public class ControllerMalhaViaria extends Thread {
 
         this.loadEntradasFromMalha();
         
+        this.carrosAndando = new ArrayList<>();
+        
         while (this.isEmExecucao()) {
             if (this.getQtdCarrosAndando() < this.getMaxCarrosSimultaneos()) {
                 try {
@@ -57,12 +60,10 @@ public class ControllerMalhaViaria extends Thread {
                     while (entradaAleatoria.hasCarro());
 
                     Carro carro = FactoryCarro.createCarro(entradaAleatoria, this.getMalha());
-
-                    ControllerIndex.getInstance().atualizaProgressBar(1);
-
+                    this.carrosAndando.add(carro);
                     carro.start();
 
-                    this.qtdCarrosAndando++;
+                    this.incrementaQtdCarrosAndando();
                     
                     ControllerMalhaViaria.sleep(this.getCooldownEntradaCarros());
                 }
@@ -76,6 +77,7 @@ public class ControllerMalhaViaria extends Thread {
     public void startMalhaViaria() {
         if (this.isAlive()) {
             this.resume();
+            this.carrosAndando.forEach(Carro::resume);
         }
         else {
             this.start();
@@ -84,10 +86,17 @@ public class ControllerMalhaViaria extends Thread {
     
     public void stopMalhaViaria() {
         this.suspend();
+        this.carrosAndando.forEach(Carro::suspend);
     }
     
     public void interruptMalhaViaria() {
         this.emExecucao = false;
+        this.carrosAndando.forEach((Carro carro) -> {
+            carro.stopCarro();
+            if (carro.getSegmento() != null) {
+                carro.getSegmento().limpaCarro();
+            }
+        });
         ControllerMalhaViaria.instance = null;
     }
 
@@ -170,8 +179,26 @@ public class ControllerMalhaViaria extends Thread {
         return emExecucao;
     }
 
-    public int getQtdCarrosAndando() {
+    public synchronized int getQtdCarrosAndando() {
         return qtdCarrosAndando;
+    }
+
+    public ControllerMalhaViaria setQtdCarrosAndando(int qtdCarrosAndando) {
+        this.qtdCarrosAndando = qtdCarrosAndando;
+        return this;
+    }
+    
+    public synchronized ControllerMalhaViaria decrementaQtdCarrosAndando() {
+        this.qtdCarrosAndando--;
+        ControllerIndex.getInstance().atualizaProgressBar(-1);
+        return this;
+    }
+    
+    
+    public synchronized ControllerMalhaViaria incrementaQtdCarrosAndando() {
+        this.qtdCarrosAndando++;
+        ControllerIndex.getInstance().atualizaProgressBar(1);
+        return this;
     }
     
 }

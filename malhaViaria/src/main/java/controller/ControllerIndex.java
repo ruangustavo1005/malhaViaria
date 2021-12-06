@@ -26,7 +26,7 @@ public class ControllerIndex {
         this.addListeners();
     }
 
-    public static ControllerIndex getInstance() {
+    public synchronized static ControllerIndex getInstance() {
         if (ControllerIndex.instance == null) {
             ControllerIndex.instance = new ControllerIndex();
         }

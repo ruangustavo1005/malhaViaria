@@ -69,6 +69,11 @@ public class Malha extends AbstractTableModel {
         return ImageIcon.class;
     }
 
+    @Override
+    public String getColumnName(int column) {
+        return String.valueOf(column);
+    }
+
     public void fireTableCellUpdated(Segmento segmento) {
         if (segmento != null) {
             this.fireTableCellUpdated(segmento.getPosY(), segmento.getPosX());
