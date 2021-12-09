@@ -137,7 +137,7 @@ public class Carro extends Thread {
         return segmento;
     }
 
-    public Carro setSegmento(Segmento segmento) {
+    public synchronized Carro setSegmento(Segmento segmento) {
         if (segmento != null) {
             this.setDirecaoBySegmento(segmento);
         }
@@ -367,7 +367,7 @@ public class Carro extends Thread {
         return !segmentoAFrente.hasCarro();
     }
     
-    private boolean podeUltrapassar(Segmento segmentoAFrente) {
+    private synchronized boolean podeUltrapassar(Segmento segmentoAFrente) {
         if (this.getSegmento().getTipo().compareTo(EnumSegmento.ESTRADA_CIMA) != 0
          && this.getSegmento().getTipo().compareTo(EnumSegmento.ESTRADA_DIRETA) != 0
          && this.getSegmento().getTipo().compareTo(EnumSegmento.ESTRADA_BAIXO) != 0
@@ -379,10 +379,10 @@ public class Carro extends Thread {
         Segmento segmentoADiagonalEsquerda = this.getSegmentoADiagonalEsquerda(segmentoAFrente);
         
         return (segmentoADiagonalDireita != null
-             && segmentoADiagonalDireita.getTipo().equals(segmentoAFrente.getTipo())
+             && segmentoADiagonalDireita.getTipo().compareTo(segmentoAFrente.getTipo()) == 0
              && this.podeAndar(segmentoADiagonalDireita))
             || (segmentoADiagonalEsquerda != null
-             && segmentoADiagonalEsquerda.getTipo().equals(segmentoAFrente.getTipo())
+             && segmentoADiagonalEsquerda.getTipo().compareTo(segmentoAFrente.getTipo()) == 0
              && this.podeAndar(segmentoADiagonalEsquerda));
     }
     
@@ -391,6 +391,13 @@ public class Carro extends Thread {
         
         Segmento segmentoADiagonalDireita  = this.getSegmentoADiagonalDireita(segmentoAFrente);
         Segmento segmentoADiagonalEsquerda = this.getSegmentoADiagonalEsquerda(segmentoAFrente);
+        
+        if (segmentoADiagonalDireita.getTipo().compareTo(segmentoAFrente.getTipo()) != 0) {
+            segmentoADiagonalDireita = null;
+        }
+        if (segmentoADiagonalEsquerda.getTipo().compareTo(segmentoAFrente.getTipo()) != 0) {
+            segmentoADiagonalEsquerda = null;
+        }
         
         if (segmentoADiagonalDireita != null && segmentoADiagonalEsquerda != null) {
             segmentoDiagonal = (new Random().nextBoolean()) ? segmentoADiagonalDireita : segmentoADiagonalEsquerda;
