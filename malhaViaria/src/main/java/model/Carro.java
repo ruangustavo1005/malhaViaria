@@ -4,6 +4,7 @@ import controller.ControllerMalhaViaria;
 import enumerators.EnumDirecaoCarro;
 import enumerators.EnumSegmento;
 import java.util.Random;
+import java.util.concurrent.Semaphore;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 import javax.swing.ImageIcon;
@@ -15,6 +16,8 @@ import utils.StringUtils;
  */
 public class Carro extends Thread {
 
+    private final Semaphore semaforoPodeAndar = new Semaphore(1);
+    
     /**
      * Tempo de espera entre um movimento e outro, em milissegundos
      */
@@ -137,7 +140,7 @@ public class Carro extends Thread {
         return segmento;
     }
 
-    public synchronized Carro setSegmento(Segmento segmento) {
+    public Carro setSegmento(Segmento segmento) {
         if (segmento != null) {
             this.setDirecaoBySegmento(segmento);
         }
@@ -363,11 +366,18 @@ public class Carro extends Thread {
         this.getMalha().fireTableCellUpdated(this.getSegmento());
     }
     
-    private synchronized boolean podeAndar(Segmento segmentoAFrente) {
-        return !segmentoAFrente.hasCarro();
+    private boolean podeAndar(Segmento segmentoAFrente) throws InterruptedException {
+        semaforoPodeAndar.acquire();
+        boolean podeAndar = !segmentoAFrente.hasCarro();
+        semaforoPodeAndar.release();
+        return podeAndar;
     }
     
-    private synchronized boolean podeUltrapassar(Segmento segmentoAFrente) {
+    private boolean podeUltrapassar(Segmento segmentoAFrente) throws InterruptedException {
+        if (this.getSegmento().getTipo().compareTo(segmentoAFrente.getTipo()) != 0) {
+            return false;
+        }
+        
         if (this.getSegmento().getTipo().compareTo(EnumSegmento.ESTRADA_CIMA) != 0
          && this.getSegmento().getTipo().compareTo(EnumSegmento.ESTRADA_DIRETA) != 0
          && this.getSegmento().getTipo().compareTo(EnumSegmento.ESTRADA_BAIXO) != 0
